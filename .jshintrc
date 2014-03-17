@@ -1,0 +1,7 @@
+{
+  "browser": true,
+  "eqnull": true,
+  "globals": { 
+    "chrome": false 
+  }
+}
