@@ -2,8 +2,7 @@
   "name": "little-black-box",
   "version": "0.0.0",
   "dependencies": {
-    "q": "^1.0.1",
-    "ringbufferjs": "0.0.1"
+    "q": "^1.0.1"
   },
   "devDependencies": {
     "grunt": "^0.4.4",
