@@ -1,13 +1,33 @@
 <!doctype html>
 <html>
     <head>
-        <link href="styles/main.css" rel="stylesheet">
+      <link rel="stylesheet" href="https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+      <script src="scripts/jquery-1.9.1.js"></script>
+      <script src="scripts/jquery-ui.js"></script>
+        <style>
+            body {
+                position: absolute;
+                top: 0; right: 0; bottom: 0; left: 0;
+                margin: 0; padding: 0;
+            }
+            canvas {
+                position: absolute;
+                width: 100%;
+            }
+            #controls {
+                position: absolute;
+                right: 50px; bottom: 0; left: 50px;
+                height: 50px;
+            }
+        </style>
     </head>
     <body>
-        <!-- CHROME EXTENSION OPTION -->
         <canvas></canvas>
-        <img/>
+        <div id="controls">
+            <div id="slider"></div>
+            <a id="done" href="#">Done</a>
+            <a id="export" href="#">Export</a>
+        </div>
         <script src="scripts/preview.js"></script>
-        HELLO!
     </body>
 </html>

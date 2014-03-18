@@ -12,12 +12,12 @@ desktopStream().then(function(stream) {
 });
 
 chrome.browserAction.onClicked.addListener(function(tab) {
-	// recorder.stop();
+	recorder.stop();
 	// console.log(recorder.frames());
 	chrome.windows.create({ url: chrome.extension.getURL('preview.html') }, function(wnd) {
-		// chrome.windows.update(wnd.id, { state: 'fullscreen' }, function(wnd) {
+		chrome.windows.update(wnd.id, { state: 'fullscreen' }, function(wnd) {
 			// send it some shizzle?
-		// });
+		});
 	});
 });
 
@@ -122,8 +122,8 @@ module.exports = function(stream) {
 		// buffer = circularVideoBuffer(video.videoWidth, video.videoHeight, 100);
 		buffer = [];
 		canvas = document.createElement('canvas');
-		canvas.width = screen.width; //video.videoWidth;
-		canvas.height = screen.height; //video.videoHeight;
+		canvas.width = video.videoWidth;
+		canvas.height = video.videoHeight;
 		ctx = canvas.getContext('2d');
 	};
 
@@ -139,7 +139,7 @@ module.exports = function(stream) {
 	}
 
 	obj.record = function() {
-		intervalId = setInterval(captureFrame, 1000/30);
+		intervalId = setInterval(captureFrame, 1000/10);
 	};
 
 	obj.stop = function() {
