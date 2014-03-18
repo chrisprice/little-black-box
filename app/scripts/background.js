@@ -57,7 +57,11 @@ module.exports = function(frameWidth, frameHeight, frameCount) {
 	};
 
 	obj.get = function() {
-		return frames;
+		var normalisedFrames = [];
+		for (var i = 0; i < frameCount; i++) {
+			normalisedFrames[i] = frames[normaliseIndex(i)];
+		}
+		return normalisedFrames;
 	};
 
 	return obj;
@@ -119,8 +123,8 @@ module.exports = function(stream) {
 	video.autoplay = "autoplay";
 	video.src = URL.createObjectURL(stream);
 	video.onloadedmetadata = function() {
-		// buffer = circularVideoBuffer(video.videoWidth, video.videoHeight, 100);
-		buffer = [];
+		buffer = circularVideoBuffer(video.videoWidth, video.videoHeight, 300);
+		// buffer = [];
 		canvas = document.createElement('canvas');
 		canvas.width = video.videoWidth;
 		canvas.height = video.videoHeight;
@@ -130,24 +134,31 @@ module.exports = function(stream) {
 	function captureFrame() {
 		ctx.drawImage(video, 0, 0);
 		var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-		// buffer.push(imageData.data);
+		buffer.push(imageData.data);
 		obj.imageData = imageData;
-		if (buffer.length === 100) {
-			buffer.shift();
-		}
-		buffer.push(imageData);
+		// if (buffer.length === 100) {
+		// buffer.shift();
+		// }
+		// buffer.push(imageData);
 	}
 
 	obj.record = function() {
+		if (intervalId != null) {
+			return;
+		}
 		intervalId = setInterval(captureFrame, 1000/10);
 	};
 
 	obj.stop = function() {
+		if (intervalId == null) {
+			return;
+		}
 		clearInterval(intervalId);
+		intervalId = null;
 	};
 	
 	obj.frames = function() {
-		return buffer.slice();
+		return buffer.get();
 	};
 
 	return obj;
