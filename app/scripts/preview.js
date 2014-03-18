@@ -9,8 +9,12 @@ chrome.runtime.getBackgroundPage(function(backgroundPage) {
 	recorder = backgroundPage.recorder;
 	console.log(backgroundPage);
 
-	var framesCount = recorder.frames().length;
+	$('#controls').draggable({
+		containment: "parent", 
+		scroll: false 
+	});
 
+	var framesCount = recorder.frames().length;
 	var $slider = $('#slider').slider({
 		range: true,
 		min: 0,
@@ -21,12 +25,12 @@ chrome.runtime.getBackgroundPage(function(backgroundPage) {
 		}
 	});
 
-	$('#done').on('click', function() {
+	$('#done').button().on('click', function() {
 		window.close();
 		return false;
 	});
 
-	$('#export').on('click', function() {
+	$('#export').button().on('click', function() {
 		var vid = new Whammy.Video(10);
 		var startIndex = $slider.slider('values', 0);
 		var endIndex = $slider.slider('values', 1);
