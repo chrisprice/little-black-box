@@ -1,19 +1,32 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function (global){
 var desktopStream = require('./desktopStream'),
 	streamRecorder = require('./streamRecorder');
 
+global.recorder = null;
+
 desktopStream().then(function(stream) {
 	console.log('stream', stream);
-	var recorder = streamRecorder(stream);
+	global.recorder = streamRecorder(stream);
 	recorder.record();
-	chrome.browserAction.onClicked.addListener(function(tab) {
-		recorder.stop();
-		console.log(recorder.frames());
+});
+
+chrome.browserAction.onClicked.addListener(function(tab) {
+	// recorder.stop();
+	// console.log(recorder.frames());
+	chrome.windows.create({ url: chrome.extension.getURL('preview.html') }, function(wnd) {
+		// chrome.windows.update(wnd.id, { state: 'fullscreen' }, function(wnd) {
+			// send it some shizzle?
+		// });
 	});
 });
 
 
 
+
+
+
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./desktopStream":3,"./streamRecorder":4}],2:[function(require,module,exports){
 module.exports = function(frameWidth, frameHeight, frameCount) {
 	var obj = {};
@@ -24,10 +37,10 @@ module.exports = function(frameWidth, frameHeight, frameCount) {
 	for (var i = 0; i < frameCount; i++) {
 		frames.push(new Uint8ClampedArray(buffer, i * frameSize, frameSize));
 	}
-	var headIndex = -1;
+	var tailIndex = 0;
 
 	function normaliseIndex(index) {
-		index += headIndex;
+		index += tailIndex;
 		if (index >= frameCount) {
 			index -= frameCount;
 		}
@@ -39,9 +52,8 @@ module.exports = function(frameWidth, frameHeight, frameCount) {
 			throw new Error('Unexpected frame size');
 		}
 
-		frames[headIndex].set(array);
-
-		headIndex = normaliseIndex(headIndex + 1);
+		frames[tailIndex].set(array);
+		tailIndex = normaliseIndex(1);
 	};
 
 	obj.get = function() {
@@ -78,7 +90,10 @@ module.exports = function() {
 			video: {
 				mandatory: {
 					chromeMediaSource: 'desktop',
-					chromeMediaSourceId: streamId
+					chromeMediaSourceId: streamId,
+					// must be set otherwise 640 * 480
+					maxWidth: 1920,
+					maxHeight: 1200
 				}
 			}
 		};
@@ -104,17 +119,23 @@ module.exports = function(stream) {
 	video.autoplay = "autoplay";
 	video.src = URL.createObjectURL(stream);
 	video.onloadedmetadata = function() {
-		buffer = circularVideoBuffer(video.videoWidth, video.videoHeight, 100);
+		// buffer = circularVideoBuffer(video.videoWidth, video.videoHeight, 100);
+		buffer = [];
 		canvas = document.createElement('canvas');
-		canvas.width = video.videoWidth;
-		canvas.height = video.videoHeight;
+		canvas.width = screen.width; //video.videoWidth;
+		canvas.height = screen.height; //video.videoHeight;
 		ctx = canvas.getContext('2d');
 	};
 
 	function captureFrame() {
 		ctx.drawImage(video, 0, 0);
 		var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-		buffer.push(imageData.data);
+		// buffer.push(imageData.data);
+		obj.imageData = imageData;
+		if (buffer.length === 100) {
+			buffer.shift();
+		}
+		buffer.push(imageData);
 	}
 
 	obj.record = function() {
@@ -126,7 +147,7 @@ module.exports = function(stream) {
 	};
 	
 	obj.frames = function() {
-		return buffer.get();
+		return buffer.slice();
 	};
 
 	return obj;

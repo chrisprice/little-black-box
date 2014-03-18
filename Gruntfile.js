@@ -13,12 +13,18 @@ module.exports = function(grunt) {
       dist: {
         files: {
           'app/scripts/background.js': ['lib/background.js'],
-          'app/scripts/options.js': ['lib/options.js']
+          'app/scripts/options.js': ['lib/options.js'],
+          'app/scripts/preview.js': ['lib/preview.js']
         }
       }
+    },
+    watch: {
+      files: ['<%= jshint.all %>'],
+      tasks: ['default'],
     }
   });
 
+  grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-browserify');
 
