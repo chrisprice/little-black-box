@@ -18,13 +18,28 @@
                 height: 100%;
                 width: 100%;
             }
-            #controls {
+            #video {
+                z-index: 10;
+                display: none;
+                background: black;
+                position: absolute;
+                top: 0; right: 0; bottom: 0; left: 0;
+            }
+            video {
+                position: absolute;
+                top: 40%; left: 50%;
+                margin-left: -320px;
+                margin-top: -240px;
+                width: 640px;
+                height: 480px;
+            }
+            .controls {
                 position: absolute;
                 right: 100px; bottom: 100px; left: 100px;
                 font-size: 24px;
                 padding: 2em;
             }
-            #controls>button {
+            .controls>button {
                 text-transform: uppercase;
                 display: inline-block;
                 padding: 0.5em; margin: 1em 0.5em 0 0;
@@ -34,10 +49,17 @@
     </head>
     <body>
         <canvas></canvas>
-        <div id="controls">
+        <div id="controls" class="controls">
             <div id="slider"></div>
             <button id="done">Cancel</button>
+            <button id="clearMask">Clear Mask</button>
             <button id="export">Export</button>
+        </div>
+        <div id="video">
+            <video controls="controls"></video>
+            <div class="controls">
+                <button id="videoDone">Cancel</button>
+            </div>
         </div>
         <script src="scripts/preview.js"></script>
     </body>
