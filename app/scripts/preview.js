@@ -10,11 +10,10 @@ var mask = {};
 
 chrome.runtime.getBackgroundPage(function(backgroundPage) {
 	recorder = backgroundPage.recorder;
-	console.log(backgroundPage);
 
 	var $controls = $('#controls');
 
-	var framesCount = recorder.frames().length;
+	var framesCount = recorder.buffer().frames.length;
 	var $slider = $('#slider').slider({
 		range: true,
 		min: 0,
@@ -33,8 +32,8 @@ chrome.runtime.getBackgroundPage(function(backgroundPage) {
 	$('#export').button().on('click', function() {
 		var startIndex = $slider.slider('values', 0);
 		var endIndex = $slider.slider('values', 1);
-		var frames = recorder.frames().slice(startIndex, endIndex);
-		var url = videoExporter(canvas.width, canvas.height, frames, mask);
+		var frames = recorder.buffer().frames.slice(startIndex, endIndex + 1);
+		var url = videoExporter(canvas.width, canvas.height, frames, mask, backgroundPage.getOptions().fps);
 		document.getElementsByTagName('video')[0].src = url;
 		$('#video').show();
 		return false;
@@ -104,11 +103,11 @@ function drawFrame(index) {
 	} else {
 		currentFrameIndex = index;
 	}
-	var data = recorder.frames()[index];
+	var data = recorder.buffer().frames[index];
 	if (canvas == null) {
 		canvas = document.querySelector('canvas');
-		canvas.width = recorder.imageData.width;
-		canvas.height = recorder.imageData.height;
+		canvas.width = recorder.buffer().width;
+		canvas.height = recorder.buffer().height;
 		mask.left = 0;
 		mask.top = 0;
 		mask.right = canvas.width;
@@ -118,7 +117,7 @@ function drawFrame(index) {
 		return; // remove this when the count is accurate
 	}
 	var ctx = canvas.getContext('2d');
-	var imageData = ctx.createImageData(recorder.imageData.width, recorder.imageData.height);
+	var imageData = ctx.createImageData(canvas.width, canvas.height);
 	imageData.data.set(data);
 	ctx.putImageData(imageData, 0, 0);
 	// mask
@@ -136,7 +135,7 @@ function drawFrame(index) {
 
 
 },{"./videoExporter":2}],2:[function(require,module,exports){
-module.exports = function(width, height, frames, mask) {
+module.exports = function(width, height, frames, mask, fps) {
 	var canvas = document.createElement('canvas');
 	canvas.width = mask.right - mask.left;
 	canvas.height = mask.bottom - mask.top;
@@ -144,7 +143,7 @@ module.exports = function(width, height, frames, mask) {
 	var ctx = canvas.getContext('2d');
 	var imageData = ctx.createImageData(width, height);
 
-	var vid = new Whammy.Video(10);
+	var vid = new Whammy.Video(fps);
 
 	frames.forEach(function(frame) {
 		imageData.data.set(frame);

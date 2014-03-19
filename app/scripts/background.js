@@ -3,35 +3,48 @@
 var desktopStream = require('./desktopStream'),
 	streamRecorder = require('./streamRecorder');
 
+var options = {
+	frames: Number(localStorage.frames) || 30,
+	fps: Number(localStorage.fps) || 10
+};
+
 global.recorder = null;
 
-desktopStream().then(function(stream) {
-	console.log('stream', stream);
-	global.recorder = streamRecorder(stream);
-	recorder.record();
-});
+global.getOptions = function() {
+	return options;
+};
+
+global.setOptions = function(opts) {
+	options = opts;
+	localStorage.frames = opts.frames;
+	localStorage.fps = opts.fps;
+	createRecorder();
+};
+
+var streamPromise = desktopStream();
+
+function createRecorder() {
+	streamPromise.then(function(stream) {
+		recorder = streamRecorder(stream, options.frames, options.fps);
+		recorder.record();
+	});
+}
 
 chrome.browserAction.onClicked.addListener(function(tab) {
 	recorder.stop();
-	// console.log(recorder.frames());
+
 	chrome.windows.create({ url: chrome.extension.getURL('preview.html') }, function(wnd) {
-		chrome.windows.update(wnd.id, { state: 'fullscreen' }, function(wnd) {
-			// send it some shizzle?
-		});
+		chrome.windows.update(wnd.id, { state: 'fullscreen' });
 	});
 });
 
-
-
-
-
-
+createRecorder();
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./desktopStream":3,"./streamRecorder":4}],2:[function(require,module,exports){
 module.exports = function(frameWidth, frameHeight, frameCount) {
 	var obj = {};
 
-	var frameSize = frameWidth * frameHeight * 4;
+	var frameSize = frameWidth * frameHeight * 4; // 4 bytes RGBA
 	var buffer = new ArrayBuffer(frameSize * frameCount);
 	var frames = [];
 	for (var i = 0; i < frameCount; i++) {
@@ -61,7 +74,11 @@ module.exports = function(frameWidth, frameHeight, frameCount) {
 		for (var i = 0; i < frameCount; i++) {
 			normalisedFrames[i] = frames[normaliseIndex(i)];
 		}
-		return normalisedFrames;
+		return {
+			width: frameWidth,
+			height: frameHeight,
+			frames: normalisedFrames
+		};
 	};
 
 	return obj;
@@ -111,7 +128,7 @@ module.exports = function() {
 },{"q":6}],4:[function(require,module,exports){
 var circularVideoBuffer = require('./circularVideoBuffer');
 
-module.exports = function(stream) {
+module.exports = function(stream, frameCount, fps) {
 	var obj = {};
 
 	var buffer = null;
@@ -123,8 +140,7 @@ module.exports = function(stream) {
 	video.autoplay = "autoplay";
 	video.src = URL.createObjectURL(stream);
 	video.onloadedmetadata = function() {
-		buffer = circularVideoBuffer(video.videoWidth, video.videoHeight, 300);
-		// buffer = [];
+		buffer = circularVideoBuffer(video.videoWidth, video.videoHeight, frameCount);
 		canvas = document.createElement('canvas');
 		canvas.width = video.videoWidth;
 		canvas.height = video.videoHeight;
@@ -135,18 +151,13 @@ module.exports = function(stream) {
 		ctx.drawImage(video, 0, 0);
 		var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 		buffer.push(imageData.data);
-		obj.imageData = imageData;
-		// if (buffer.length === 100) {
-		// buffer.shift();
-		// }
-		// buffer.push(imageData);
 	}
 
 	obj.record = function() {
 		if (intervalId != null) {
 			return;
 		}
-		intervalId = setInterval(captureFrame, 1000/10);
+		intervalId = setInterval(captureFrame, 1000/fps);
 	};
 
 	obj.stop = function() {
@@ -157,7 +168,7 @@ module.exports = function(stream) {
 		intervalId = null;
 	};
 	
-	obj.frames = function() {
+	obj.buffer = function() {
 		return buffer.get();
 	};
 
@@ -2125,5 +2136,5 @@ return Q;
 
 });
 
-}).call(this,require("c:\\dev\\2014\\little-black-box\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"))
-},{"c:\\dev\\2014\\little-black-box\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":5}]},{},[1])
+}).call(this,require("/Users/chris/Documents/scottlogicblogs/little-black-box/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
+},{"/Users/chris/Documents/scottlogicblogs/little-black-box/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":5}]},{},[1])
